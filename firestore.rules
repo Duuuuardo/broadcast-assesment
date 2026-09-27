@@ -1,0 +1,96 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * Identidade do tenant: o uid do Firebase Authentication. Sem sessão, nada é
+     * permitido — nem leitura, nem escrita.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(data) {
+      return isSignedIn() && data.ownerId == request.auth.uid;
+    }
+
+    /**
+     * Leitura (get/list) e delete. Por serem avaliados documento a documento,
+     * o Firestore só entrega documentos cujo `ownerId` é o uid autenticado: uma
+     * consulta sem o filtro de tenant é negada com `permission-denied` em vez de
+     * vazar dados.
+     */
+    function canReadDocument() {
+      return isOwner(resource.data);
+    }
+
+    /**
+     * Criação: o `ownerId` gravado precisa ser o próprio uid. Sem esta checagem
+     * um cliente conseguiria escrever um documento em nome de outro tenant.
+     */
+    function createsAsSelf() {
+      return isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    /**
+     * Update: o documento atual e o novo precisam pertencer ao mesmo uid, o que
+     * impede tanto editar dados de outro tenant quanto "sequestrar" um documento
+     * trocando o `ownerId`.
+     */
+    function keepsOwnership() {
+      return isOwner(resource.data)
+        && request.resource.data.ownerId == request.auth.uid;
+    }
+
+    /**
+     * Integridade entre entidades: a conexão referenciada precisa existir e
+     * pertencer ao mesmo tenant. O `get` nega quando o documento não existe ou
+     * não é legível pelo autor, então um `connectionId` de outro cliente é
+     * recusado na criação e na atualização de contatos e mensagens.
+     *
+     * Custa uma leitura do documento por escrita validada. É a única validação
+     * de domínio nas regras: a lista `contactIds` de uma mensagem não é
+     * verificada aqui — isso é responsabilidade do service, para não transformar
+     * as regras em um motor de regras de negócio.
+     */
+    function ownsConnection(connectionId) {
+      return get(/databases/$(database)/documents/connections/$(connectionId))
+        .data.ownerId == request.auth.uid;
+    }
+
+    match /connections/{connectionId} {
+      allow read: if canReadDocument();
+      allow create: if createsAsSelf();
+      allow update: if keepsOwnership();
+      allow delete: if canReadDocument();
+    }
+
+    match /contacts/{contactId} {
+      allow read: if canReadDocument();
+      allow create: if createsAsSelf()
+                    && ownsConnection(request.resource.data.connectionId);
+      allow update: if keepsOwnership()
+                    && ownsConnection(request.resource.data.connectionId);
+      allow delete: if canReadDocument();
+    }
+
+    match /messages/{messageId} {
+      allow read: if canReadDocument();
+      allow create: if createsAsSelf()
+                    && ownsConnection(request.resource.data.connectionId);
+      allow update: if keepsOwnership()
+                    && ownsConnection(request.resource.data.connectionId);
+      allow delete: if canReadDocument();
+    }
+
+    /**
+     * Qualquer outra collection é negada ao cliente. Vale também para uma
+     * hipotética `users`: o `ownerId` do domínio vem do `request.auth.uid` e nada
+     * no cliente precisa ler ou gravar um documento de perfil.
+     */
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
