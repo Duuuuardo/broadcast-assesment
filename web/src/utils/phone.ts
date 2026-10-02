@@ -2,6 +2,8 @@ const ALLOWED_CHARACTERS = /^[0-9+()\s-]+$/
 
 const MIN_DIGITS = 8
 
+const MAX_DIGITS = 15
+
 export const countPhoneDigits = (value: string): number => value.replace(/\D/g, '').length
 
 export const phoneValidationMessage = (value: string): string | null => {
@@ -19,8 +21,18 @@ export const phoneValidationMessage = (value: string): string | null => {
     return 'Use o sinal + apenas no início do telefone.'
   }
 
-  if (countPhoneDigits(phone) < MIN_DIGITS) {
+  const digits = phone.replace(/\D/g, '')
+
+  if (digits.length < MIN_DIGITS) {
     return `O telefone precisa ter ao menos ${MIN_DIGITS} dígitos.`
+  }
+
+  if (digits.length > MAX_DIGITS) {
+    return `O telefone precisa ter no máximo ${MAX_DIGITS} dígitos.`
+  }
+
+  if (new Set(digits).size === 1) {
+    return 'Informe um telefone válido.'
   }
 
   return null

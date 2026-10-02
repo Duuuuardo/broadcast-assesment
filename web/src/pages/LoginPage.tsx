@@ -99,7 +99,7 @@ export const LoginPage = () => {
           value={email}
           disabled={submitting}
           error={fieldErrors.email !== undefined}
-          helperText={fieldErrors.email}
+          helperText={fieldErrors.email ?? ' '}
           onChange={(event) => setEmail(event.target.value)}
         />
 
@@ -114,7 +114,7 @@ export const LoginPage = () => {
           value={password}
           disabled={submitting}
           error={fieldErrors.password !== undefined}
-          helperText={fieldErrors.password}
+          helperText={fieldErrors.password ?? ' '}
           onChange={(event) => setPassword(event.target.value)}
         />
 

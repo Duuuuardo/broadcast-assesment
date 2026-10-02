@@ -49,6 +49,8 @@ export const RegisterPage = () => {
 
     if (password === '') {
       errors.password = 'Informe uma senha.'
+    } else if (password.length < 6) {
+      errors.password = 'A senha precisa ter ao menos 6 caracteres.'
     }
 
     if (confirmPassword === '') {
@@ -112,7 +114,7 @@ export const RegisterPage = () => {
           value={name}
           disabled={submitting}
           error={fieldErrors.name !== undefined}
-          helperText={fieldErrors.name}
+          helperText={fieldErrors.name ?? ' '}
           onChange={(event) => setName(event.target.value)}
         />
 
@@ -127,7 +129,7 @@ export const RegisterPage = () => {
           value={email}
           disabled={submitting}
           error={fieldErrors.email !== undefined}
-          helperText={fieldErrors.email}
+          helperText={fieldErrors.email ?? ' '}
           onChange={(event) => setEmail(event.target.value)}
         />
 
@@ -142,7 +144,7 @@ export const RegisterPage = () => {
           value={password}
           disabled={submitting}
           error={fieldErrors.password !== undefined}
-          helperText={fieldErrors.password}
+          helperText={fieldErrors.password ?? ' '}
           onChange={(event) => setPassword(event.target.value)}
         />
 
@@ -157,7 +159,7 @@ export const RegisterPage = () => {
           value={confirmPassword}
           disabled={submitting}
           error={fieldErrors.confirmPassword !== undefined}
-          helperText={fieldErrors.confirmPassword}
+          helperText={fieldErrors.confirmPassword ?? ' '}
           onChange={(event) => setConfirmPassword(event.target.value)}
         />
 
