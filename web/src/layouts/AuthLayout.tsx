@@ -11,19 +11,8 @@ type AuthLayoutProps = {
   footer: ReactNode
 }
 
-const Wordmark = () => (
-  <span className="inline-flex items-center gap-2">
-    <span className="flex h-5 w-5 items-center justify-center rounded-[5px] bg-slate-900 text-[11px] font-semibold leading-none text-white">
-      B
-    </span>
-    <span className="text-[15px] font-semibold tracking-tight text-slate-900">Broadcast</span>
-  </span>
-)
-
 export const AuthLayout = ({ title, description, children, footer }: AuthLayoutProps) => (
-  <Box className="flex min-h-screen w-full flex-col items-center justify-center gap-8 bg-slate-50 px-4 py-12">
-    <Wordmark />
-
+  <Box className="flex min-h-screen w-full flex-col items-center justify-center gap-6 bg-slate-50 px-4 py-12">
     <Card className="w-full max-w-[400px]">
       <CardContent className="px-7 py-7">
         <div className="mb-7 space-y-1.5">
